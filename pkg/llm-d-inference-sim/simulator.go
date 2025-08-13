@@ -29,7 +29,6 @@ import (
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/go-logr/logr"
-	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/valyala/fasthttp"
@@ -188,7 +187,7 @@ func (s *VllmSimulator) Printf(format string, args ...interface{}) {
 
 // readRequest reads and parses data from the body of the given request according the type defined by isChatCompletion
 func (s *VllmSimulator) readRequest(ctx *fasthttp.RequestCtx, isChatCompletion bool) (openaiserverapi.CompletionRequest, error) {
-	requestID := uuid.NewString()
+	requestID := common.GenerateUUIDString()
 
 	if isChatCompletion {
 		var req openaiserverapi.ChatCompletionRequest
@@ -534,7 +533,7 @@ func (s *VllmSimulator) HandleError(_ *fasthttp.RequestCtx, err error) {
 func (s *VllmSimulator) createCompletionResponse(isChatCompletion bool, respTokens []string, toolCalls []openaiserverapi.ToolCall,
 	finishReason *string, usageData *openaiserverapi.Usage, modelName string, doRemoteDecode bool) openaiserverapi.CompletionResponse {
 	baseResp := openaiserverapi.BaseCompletionResponse{
-		ID:      chatComplIDPrefix + uuid.NewString(),
+		ID:      chatComplIDPrefix + common.GenerateUUIDString(),
 		Created: time.Now().Unix(),
 		Model:   modelName,
 		Usage:   usageData,
