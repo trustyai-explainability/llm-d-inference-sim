@@ -54,6 +54,7 @@ RUN microdnf install -y dnf && \
     rm -rf /var/cache/dnf /var/lib/dnf
 
 COPY --from=builder /workspace/bin/llm-d-inference-sim /app/llm-d-inference-sim
+COPY --chown=65532:65532 ./db.sqlite /db/db.sqlite
 
 USER 65532:65532
 
