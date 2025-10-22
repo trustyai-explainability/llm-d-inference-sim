@@ -32,8 +32,8 @@ import (
 	"github.com/llm-d/llm-d-inference-sim/pkg/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 )
 
 const (
@@ -73,7 +73,7 @@ var _ = Describe("Simulator metrics", Ordered, func() {
 		client, err := startServerWithArgs(ctx, common.ModeRandom, args, nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		openaiclient, params := getOpenAIClentAndChatParams(client, modelName, userMessage, false)
+		openaiclient, params := getOpenAIClientAndChatParams(client, modelName, userMessage, false)
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -316,7 +316,7 @@ var _ = Describe("Simulator metrics", Ordered, func() {
 		client, err := startServerWithArgs(ctx, common.ModeRandom, args, nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		openaiclient, params := getOpenAIClentAndChatParams(client, modelName, userMessage, false)
+		openaiclient, params := getOpenAIClientAndChatParams(client, modelName, userMessage, false)
 		params.MaxTokens = openai.Int(5)
 
 		var reqWg, metricsWg sync.WaitGroup
