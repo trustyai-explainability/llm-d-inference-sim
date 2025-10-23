@@ -36,9 +36,9 @@ import (
 // Metrics reported:
 // - lora_requests_info
 func (s *VllmSimulator) createAndRegisterPrometheus() error {
-	s.registry = prometheus.NewRegistry()
+	s.metrics.registry = prometheus.NewRegistry()
 
-	s.loraInfo = prometheus.NewGaugeVec(
+	s.metrics.loraInfo = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: "",
 			Name:      "vllm:lora_requests_info",
@@ -47,12 +47,12 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		[]string{vllmapi.PromLabelMaxLora, vllmapi.PromLabelRunningLoraAdapters, vllmapi.PromLabelWaitingLoraAdapters},
 	)
 
-	if err := s.registry.Register(s.loraInfo); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.loraInfo); err != nil {
 		s.logger.Error(err, "Prometheus lora info gauge register failed")
 		return err
 	}
 
-	s.runningRequests = prometheus.NewGaugeVec(
+	s.metrics.runningRequests = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: "",
 			Name:      "vllm:num_requests_running",
@@ -61,13 +61,13 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		[]string{vllmapi.PromLabelModelName},
 	)
 
-	if err := s.registry.Register(s.runningRequests); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.runningRequests); err != nil {
 		s.logger.Error(err, "Prometheus number of running requests gauge register failed")
 		return err
 	}
 
 	// not supported for now, reports constant value
-	s.waitingRequests = prometheus.NewGaugeVec(
+	s.metrics.waitingRequests = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: "",
 			Name:      "vllm:num_requests_waiting",
@@ -76,12 +76,12 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		[]string{vllmapi.PromLabelModelName},
 	)
 
-	if err := s.registry.Register(s.waitingRequests); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.waitingRequests); err != nil {
 		s.logger.Error(err, "Prometheus number of requests in queue gauge register failed")
 		return err
 	}
 
-	s.ttft = prometheus.NewHistogramVec(
+	s.metrics.ttft = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Subsystem: "",
 			Name:      "vllm:time_to_first_token_seconds",
@@ -91,12 +91,12 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		[]string{vllmapi.PromLabelModelName},
 	)
 
-	if err := s.registry.Register(s.ttft); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.ttft); err != nil {
 		s.logger.Error(err, "Prometheus time to first token histogram register failed")
 		return err
 	}
 
-	s.tpot = prometheus.NewHistogramVec(
+	s.metrics.tpot = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Subsystem: "",
 			Name:      "vllm:time_per_output_token_seconds",
@@ -106,12 +106,12 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		[]string{vllmapi.PromLabelModelName},
 	)
 
-	if err := s.registry.Register(s.tpot); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.tpot); err != nil {
 		s.logger.Error(err, "Prometheus time per output token histogram register failed")
 		return err
 	}
 
-	s.kvCacheUsagePercentage = prometheus.NewGaugeVec(
+	s.metrics.kvCacheUsagePercentage = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: "",
 			Name:      "vllm:gpu_cache_usage_perc",
@@ -120,12 +120,12 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		[]string{vllmapi.PromLabelModelName},
 	)
 
-	if err := s.registry.Register(s.kvCacheUsagePercentage); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.kvCacheUsagePercentage); err != nil {
 		s.logger.Error(err, "Prometheus kv cache usage percentage gauge register failed")
 		return err
 	}
 
-	s.requestPromptTokens = prometheus.NewHistogramVec(
+	s.metrics.requestPromptTokens = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Subsystem: "",
 			Name:      "vllm:request_prompt_tokens",
@@ -134,12 +134,12 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		},
 		[]string{vllmapi.PromLabelModelName},
 	)
-	if err := s.registry.Register(s.requestPromptTokens); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.requestPromptTokens); err != nil {
 		s.logger.Error(err, "Prometheus request_prompt_tokens histogram register failed")
 		return err
 	}
 
-	s.requestGenerationTokens = prometheus.NewHistogramVec(
+	s.metrics.requestGenerationTokens = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Subsystem: "",
 			Name:      "vllm:request_generation_tokens",
@@ -148,12 +148,12 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		},
 		[]string{vllmapi.PromLabelModelName},
 	)
-	if err := s.registry.Register(s.requestGenerationTokens); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.requestGenerationTokens); err != nil {
 		s.logger.Error(err, "Prometheus request_generation_tokens histogram register failed")
 		return err
 	}
 
-	s.requestParamsMaxTokens = prometheus.NewHistogramVec(
+	s.metrics.requestParamsMaxTokens = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Subsystem: "",
 			Name:      "vllm:request_params_max_tokens",
@@ -162,12 +162,12 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		},
 		[]string{vllmapi.PromLabelModelName},
 	)
-	if err := s.registry.Register(s.requestParamsMaxTokens); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.requestParamsMaxTokens); err != nil {
 		s.logger.Error(err, "Prometheus request_params_max_tokens histogram register failed")
 		return err
 	}
 
-	s.requestSuccessTotal = prometheus.NewCounterVec(
+	s.metrics.requestSuccessTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Subsystem: "",
 			Name:      "vllm:request_success_total",
@@ -175,7 +175,7 @@ func (s *VllmSimulator) createAndRegisterPrometheus() error {
 		},
 		[]string{vllmapi.PromLabelModelName, vllmapi.PromLabelFinishReason},
 	)
-	if err := s.registry.Register(s.requestSuccessTotal); err != nil {
+	if err := s.metrics.registry.Register(s.metrics.requestSuccessTotal); err != nil {
 		s.logger.Error(err, "Prometheus request_success_total counter register failed")
 		return err
 	}
@@ -195,41 +195,41 @@ func (s *VllmSimulator) setInitialPrometheusMetrics() {
 		nWaitingReqs = float64(s.config.FakeMetrics.WaitingRequests)
 		kvCacheUsage = float64(s.config.FakeMetrics.KVCacheUsagePercentage)
 		if s.config.FakeMetrics.TTFTBucketValues != nil {
-			s.initFakeHistogram(s.ttft, common.TTFTBucketsBoundaries, s.config.FakeMetrics.TTFTBucketValues)
+			s.initFakeHistogram(s.metrics.ttft, common.TTFTBucketsBoundaries, s.config.FakeMetrics.TTFTBucketValues)
 		}
 
 		if s.config.FakeMetrics.TPOTBucketValues != nil {
-			s.initFakeHistogram(s.tpot, common.TPOTBucketsBoundaries, s.config.FakeMetrics.TPOTBucketValues)
+			s.initFakeHistogram(s.metrics.tpot, common.TPOTBucketsBoundaries, s.config.FakeMetrics.TPOTBucketValues)
 		}
 		buckets := build125Buckets(s.config.MaxModelLen)
 		if s.config.FakeMetrics.RequestPromptTokens != nil {
-			s.initFakeHistogram(s.requestPromptTokens, buckets, s.config.FakeMetrics.RequestPromptTokens)
+			s.initFakeHistogram(s.metrics.requestPromptTokens, buckets, s.config.FakeMetrics.RequestPromptTokens)
 		}
 		if s.config.FakeMetrics.RequestGenerationTokens != nil {
-			s.initFakeHistogram(s.requestParamsMaxTokens, buckets, s.config.FakeMetrics.RequestGenerationTokens)
+			s.initFakeHistogram(s.metrics.requestParamsMaxTokens, buckets, s.config.FakeMetrics.RequestGenerationTokens)
 		}
 		if s.config.FakeMetrics.RequestParamsMaxTokens != nil {
-			s.initFakeHistogram(s.requestGenerationTokens, buckets, s.config.FakeMetrics.RequestParamsMaxTokens)
+			s.initFakeHistogram(s.metrics.requestGenerationTokens, buckets, s.config.FakeMetrics.RequestParamsMaxTokens)
 		}
 
 		for reason, requestSuccessTotal := range s.config.FakeMetrics.RequestSuccessTotal {
-			s.requestSuccessTotal.WithLabelValues(modelName, reason).Add(float64(requestSuccessTotal))
+			s.metrics.requestSuccessTotal.WithLabelValues(modelName, reason).Add(float64(requestSuccessTotal))
 		}
 	}
 
-	s.runningRequests.WithLabelValues(modelName).Set(nRunningReqs)
-	s.waitingRequests.WithLabelValues(modelName).Set(nWaitingReqs)
-	s.kvCacheUsagePercentage.WithLabelValues(modelName).Set(kvCacheUsage)
+	s.metrics.runningRequests.WithLabelValues(modelName).Set(nRunningReqs)
+	s.metrics.waitingRequests.WithLabelValues(modelName).Set(nWaitingReqs)
+	s.metrics.kvCacheUsagePercentage.WithLabelValues(modelName).Set(kvCacheUsage)
 
 	if s.config.FakeMetrics != nil && len(s.config.FakeMetrics.LoraMetrics) != 0 {
 		for _, metrics := range s.config.FakeMetrics.LoraMetrics {
-			s.loraInfo.WithLabelValues(
+			s.metrics.loraInfo.WithLabelValues(
 				strconv.Itoa(s.config.MaxLoras),
 				metrics.RunningLoras,
 				metrics.WaitingLoras).Set(metrics.Timestamp)
 		}
 	} else {
-		s.loraInfo.WithLabelValues(
+		s.metrics.loraInfo.WithLabelValues(
 			strconv.Itoa(s.config.MaxLoras),
 			"",
 			"").Set(float64(time.Now().Unix()))
@@ -269,27 +269,27 @@ func (s *VllmSimulator) reportLoras() {
 	if s.config.FakeMetrics != nil {
 		return
 	}
-	if s.loraInfo == nil {
+	if s.metrics.loraInfo == nil {
 		// Happens in the tests
 		return
 	}
 
 	var runningLoras []string
-	s.runningLoras.Range(func(key any, _ any) bool {
+	s.metrics.runningLoras.Range(func(key any, _ any) bool {
 		if lora, ok := key.(string); ok {
 			runningLoras = append(runningLoras, lora)
 		}
 		return true
 	})
 	var waitingLoras []string
-	s.waitingLoras.Range(func(key any, _ any) bool {
+	s.metrics.waitingLoras.Range(func(key any, _ any) bool {
 		if lora, ok := key.(string); ok {
 			waitingLoras = append(waitingLoras, lora)
 		}
 		return true
 	})
 
-	s.loraInfo.WithLabelValues(
+	s.metrics.loraInfo.WithLabelValues(
 		strconv.Itoa(s.config.MaxLoras),
 		strings.Join(runningLoras, ","),
 		strings.Join(waitingLoras, ",")).Set(float64(time.Now().Unix()))
@@ -300,9 +300,9 @@ func (s *VllmSimulator) reportRunningRequests() {
 	if s.config.FakeMetrics != nil {
 		return
 	}
-	if s.runningRequests != nil {
-		s.runningRequests.WithLabelValues(
-			s.getDisplayedModelName(s.config.Model)).Set(float64(s.nRunningReqs))
+	if s.metrics.runningRequests != nil {
+		s.metrics.runningRequests.WithLabelValues(
+			s.getDisplayedModelName(s.config.Model)).Set(float64(s.metrics.nRunningReqs))
 	}
 }
 
@@ -311,9 +311,9 @@ func (s *VllmSimulator) reportWaitingRequests() {
 	if s.config.FakeMetrics != nil {
 		return
 	}
-	if s.waitingRequests != nil {
-		s.waitingRequests.WithLabelValues(
-			s.getDisplayedModelName(s.config.Model)).Set(float64(s.nWaitingReqs))
+	if s.metrics.waitingRequests != nil {
+		s.metrics.waitingRequests.WithLabelValues(
+			s.getDisplayedModelName(s.config.Model)).Set(float64(s.metrics.nWaitingReqs))
 	}
 }
 
@@ -322,8 +322,8 @@ func (s *VllmSimulator) reportTTFT(ttftInSecs float64) {
 	if s.config.FakeMetrics != nil {
 		return
 	}
-	if s.ttft != nil {
-		s.ttft.WithLabelValues(
+	if s.metrics.ttft != nil {
+		s.metrics.ttft.WithLabelValues(
 			s.getDisplayedModelName(s.config.Model)).Observe(ttftInSecs)
 	}
 }
@@ -333,8 +333,8 @@ func (s *VllmSimulator) reportTPOT(tpotInSecs float64) {
 	if s.config.FakeMetrics != nil {
 		return
 	}
-	if s.tpot != nil {
-		s.tpot.WithLabelValues(
+	if s.metrics.tpot != nil {
+		s.metrics.tpot.WithLabelValues(
 			s.getDisplayedModelName(s.config.Model)).Observe(tpotInSecs)
 	}
 }
@@ -344,8 +344,8 @@ func (s *VllmSimulator) reportKVCacheUsage(value float64) {
 	if s.config.FakeMetrics != nil {
 		return
 	}
-	if s.kvCacheUsagePercentage != nil {
-		s.kvCacheUsagePercentage.WithLabelValues(
+	if s.metrics.kvCacheUsagePercentage != nil {
+		s.metrics.kvCacheUsagePercentage.WithLabelValues(
 			s.getDisplayedModelName(s.config.Model)).Set(value)
 	}
 }
@@ -367,8 +367,8 @@ func (s *VllmSimulator) waitingRequestsUpdater(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case inc := <-s.waitingReqChan:
-			s.nWaitingReqs += inc
+		case inc := <-s.metrics.waitingReqChan:
+			s.metrics.nWaitingReqs += inc
 			s.reportWaitingRequests()
 		}
 	}
@@ -380,8 +380,8 @@ func (s *VllmSimulator) runningRequestsUpdater(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case inc := <-s.runReqChan:
-			s.nRunningReqs += inc
+		case inc := <-s.metrics.runReqChan:
+			s.metrics.nRunningReqs += inc
 			s.reportRunningRequests()
 		}
 	}
@@ -393,7 +393,7 @@ func (s *VllmSimulator) kvCacheUsageUpdater(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case value := <-s.kvCacheUsageChan:
+		case value := <-s.metrics.kvCacheUsageChan:
 			s.reportKVCacheUsage(value)
 		}
 	}
@@ -405,7 +405,7 @@ func (s *VllmSimulator) ttftUpdater(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case value := <-s.ttftChan:
+		case value := <-s.metrics.ttftChan:
 			s.reportTTFT(value)
 		}
 	}
@@ -417,7 +417,7 @@ func (s *VllmSimulator) tpotUpdater(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case value := <-s.tpotChan:
+		case value := <-s.metrics.tpotChan:
 			s.reportTPOT(value)
 		}
 	}
@@ -430,15 +430,15 @@ func (s *VllmSimulator) lorasUpdater(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case loraUpdate := <-s.lorasChan:
+		case loraUpdate := <-s.metrics.lorasChan:
 			switch loraUpdate.state {
 			case waitingUsageState:
-				s.incrementLoraRefCount(loraUpdate.name, &s.waitingLoras)
+				s.incrementLoraRefCount(loraUpdate.name, &s.metrics.waitingLoras)
 			case runningUsageState:
-				s.decrementLoraRefCount(loraUpdate.name, &s.waitingLoras)
-				s.incrementLoraRefCount(loraUpdate.name, &s.runningLoras)
+				s.decrementLoraRefCount(loraUpdate.name, &s.metrics.waitingLoras)
+				s.incrementLoraRefCount(loraUpdate.name, &s.metrics.runningLoras)
 			case doneUsageState:
-				s.decrementLoraRefCount(loraUpdate.name, &s.runningLoras)
+				s.decrementLoraRefCount(loraUpdate.name, &s.metrics.runningLoras)
 			}
 			s.reportLoras()
 		}
@@ -463,8 +463,6 @@ func (s *VllmSimulator) decrementLoraRefCount(lora string, theMap *sync.Map) {
 			// last lora instance stopped its execution - remove from the map
 			theMap.Delete(lora)
 		}
-	} else {
-		s.logger.Error(nil, "Zero model reference", "model", lora)
 	}
 }
 
@@ -475,7 +473,7 @@ func (s *VllmSimulator) recordRequestUpdater(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case event := <-s.requestSuccessChan:
+		case event := <-s.metrics.requestSuccessChan:
 			s.recordRequestMetricsOnSuccess(
 				event.promptTokens,
 				event.generationTokens,
@@ -503,12 +501,12 @@ type requestSuccessEvent struct {
 func (s *VllmSimulator) recordRequestMetricsOnSuccess(promptTokens,
 	generationTokens int, maxTokens *int64, finishReason string) {
 	modelName := s.getDisplayedModelName(s.config.Model)
-	s.requestPromptTokens.WithLabelValues(modelName).Observe(float64(promptTokens))
-	s.requestGenerationTokens.WithLabelValues(modelName).Observe(float64(generationTokens))
+	s.metrics.requestPromptTokens.WithLabelValues(modelName).Observe(float64(promptTokens))
+	s.metrics.requestGenerationTokens.WithLabelValues(modelName).Observe(float64(generationTokens))
 	if maxTokens != nil {
-		s.requestParamsMaxTokens.WithLabelValues(modelName).Observe(float64(*maxTokens))
+		s.metrics.requestParamsMaxTokens.WithLabelValues(modelName).Observe(float64(*maxTokens))
 	}
-	s.requestSuccessTotal.WithLabelValues(modelName, finishReason).Inc()
+	s.metrics.requestSuccessTotal.WithLabelValues(modelName, finishReason).Inc()
 }
 
 // build125Buckets generates histogram buckets in powers of 10 scaled by [1,2,5].
