@@ -1,3 +1,19 @@
+# Build Stage: build tokenizers lib
+FROM scratch AS tokenizers-src
+
+# Ensure that the TOKENIZER_VERSION matches the one used in the imported llm-d-kv-cache-manager version
+ARG TOKENIZER_VERSION=v1.22.1
+ADD https://github.com/daulet/tokenizers.git#${TOKENIZER_VERSION} tokenizers/
+
+FROM rust:1.87 AS builder-rust
+ARG TARGETPLATFORM
+WORKDIR /workspace
+COPY --from=tokenizers-src tokenizers/benches ./benches
+COPY --from=tokenizers-src tokenizers/src ./src
+COPY --from=tokenizers-src tokenizers/Cargo.toml ./Cargo.toml
+COPY --from=tokenizers-src tokenizers/Cargo.lock ./Cargo.lock
+RUN cargo build --release
+
 # Build Stage: using Go 1.24.1 image
 FROM quay.io/projectquay/golang:1.24 AS builder
 ARG TARGETOS
@@ -23,9 +39,11 @@ COPY . .
 
 # HuggingFace tokenizer bindings
 RUN mkdir -p lib
-# Ensure that the TOKENIZER_VERSION matches the one used in the imported llm-d-kv-cache-manager version
-ARG TOKENIZER_VERSION=v1.22.1
-RUN curl -L https://github.com/daulet/tokenizers/releases/download/${TOKENIZER_VERSION}/libtokenizers.${TARGETOS}-${TARGETARCH}.tar.gz | tar -xz -C lib
+
+COPY --from=builder-rust \
+    /workspace/target/release/libtokenizers.a \
+    ./lib/
+
 RUN ranlib lib/*.a
 
 # Build
@@ -54,8 +72,6 @@ RUN microdnf install -y dnf && \
     rm -rf /var/cache/dnf /var/lib/dnf
 
 COPY --from=builder /workspace/bin/llm-d-inference-sim /app/llm-d-inference-sim
-COPY --chown=65532:65532 ./db.sqlite /db/db.sqlite
-
 USER 65532:65532
 
 ENTRYPOINT ["/app/llm-d-inference-sim"]
